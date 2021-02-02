@@ -1,5 +1,4 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 ;
 class FractalApp {
     constructor() {
@@ -12,20 +11,14 @@ class FractalApp {
     createClickEvents() {
         let canvas = this.canvas;
         let click;
-        let click_counter = 1;
+        let click_counter = 0;
         canvas.addEventListener("mousedown", (e) => {
+            click_counter++;
             click = this.getClickLocation(e);
-            this.drawPoint(click, click_counter++);
+            this.drawBoundingPoint(click, click_counter);
+            if (click_counter === 2)
+                this.updateStartingLocation();
         });
-        // Set our initial starting position to be between 
-        if (click_counter === 2) {
-            let starting_x = (this.points[0].x + this.points[1].x) / 2;
-            let starting_y = (this.points[0].y + this.points[1].y) / 2;
-            this.last_position = {
-                x: starting_x,
-                y: starting_y
-            };
-        }
     }
     getClickLocation(e) {
         const bounds = this.canvas.getBoundingClientRect();
@@ -36,8 +29,19 @@ class FractalApp {
             y: click_y
         };
     }
-    drawPoint(location, click_counter) {
+    // Helper method to update the starting position when we have enough points.
+    updateStartingLocation() {
+        let starting_x = (this.points[0].x + this.points[1].x) / 2;
+        let starting_y = (this.points[0].y + this.points[1].y) / 2;
+        this.last_position = {
+            x: starting_x,
+            y: starting_y
+        };
+    }
+    // Method to create bounding points based on user input
+    drawBoundingPoint(location, click_counter) {
         // Draw a ciruclar point on the Canvas at the click location
+        this.context.fillStyle = "red";
         this.context.beginPath();
         this.context.arc(location.x, location.y, 2, 0, 2 * Math.PI);
         this.context.fill();
@@ -47,7 +51,15 @@ class FractalApp {
         // Add the point to our array of points
         this.points.push(location);
     }
-    // A helper method to find the closest point to a given position
+    drawInteriorPoint() {
+        const location = this.calculateNextPoint();
+        console.log("Points", this.points, "\nLocation:", location);
+        this.context.fillStyle = "black";
+        this.context.beginPath();
+        this.context.arc(location.x, location.y, 2, 0, 2 * Math.PI);
+        this.context.fill();
+    }
+    // Helper method to find the closest point to a given position
     findClosestPoint(pos) {
         let closest_dist = Number.MAX_VALUE;
         let closest_point = pos;
@@ -59,7 +71,30 @@ class FractalApp {
                 closest_point = { x: point.x, y: point.y };
             }
         }
-        return closest_point;
+        return { x: (pos.x + closest_point.x) / 2, y: (pos.y + closest_point.y) / 2 };
+    }
+    // Helper method to determine the location of the next position
+    calculateNextPoint() {
+        const closest = this.findClosestPoint(this.last_position);
+        this.last_position = { x: (closest.x + this.last_position.x) / 2, y: (closest.y + this.last_position.y) / 2 };
+        return this.last_position;
     }
 }
 let app = new FractalApp();
+let update = false;
+// Set up the control button
+const control_button = document.getElementById("control-button");
+control_button.addEventListener("click", () => {
+    update = !update;
+    if (update)
+        updateCanvas();
+    control_button.innerHTML = (update ? "Stop" : "Start");
+});
+// Until the stop button is pressed, draw new points.
+function updateCanvas() {
+    setTimeout(() => {
+        app.drawInteriorPoint();
+        if (update)
+            updateCanvas();
+    }, 1000);
+}
