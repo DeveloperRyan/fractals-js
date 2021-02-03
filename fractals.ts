@@ -18,6 +18,7 @@ class FractalApp {
         this.createClickEvents();
     }
 
+    // Helper method to setup click event handling.
     private createClickEvents(): void {
         let canvas: HTMLCanvasElement = this.canvas;
         let click: position;
@@ -32,6 +33,7 @@ class FractalApp {
         });
     }
 
+    // Helper method to get location of a click event.
     private getClickLocation(e: MouseEvent): position {
         const bounds = this.canvas.getBoundingClientRect();
         const click_x = e.clientX - bounds.left;
@@ -80,28 +82,10 @@ class FractalApp {
         this.context.fill();
     }
     
-    // Helper method to find the closest point to a given position
-    private findClosestPoint(pos: position): position {
-        let closest_dist: number = Number.MAX_VALUE;
-        let closest_point: position = pos;
-
-        // Go through all points and find whichever one is closest
-        for (const point of this.points) {
-            let dist = Math.sqrt(Math.pow((point.x - pos.x), 2) + Math.pow((point.y - pos.y), 2));
-            if (dist < closest_dist) {
-                closest_dist = dist;
-                closest_point = { x: point.x, y: point.y };
-            }
-        }
-
-        return {x: (pos.x + closest_point.x) / 2, y: (pos.y + closest_point.y) / 2};
-    }
-
-
     // Helper method to determine the location of the next position
     private calculateNextPoint(): position {
-        const closest: position = this.findClosestPoint(this.last_position)
-        this.last_position = {x: (closest.x + this.last_position.x) / 2, y: (closest.y + this.last_position.y) / 2};
+        const choice = this.points[Math.floor(Math.random() * this.points.length)]; // Randomly choose a point from 
+        this.last_position = {x: (choice.x + this.last_position.x) / 2, y: (choice.y + this.last_position.y) / 2};
         return this.last_position;
     }
 }
@@ -124,5 +108,5 @@ function updateCanvas(): void {
     setTimeout(() => {
         app.drawInteriorPoint();
         if (update) updateCanvas();
-    }, 1000);
+    }, 5);
 }
